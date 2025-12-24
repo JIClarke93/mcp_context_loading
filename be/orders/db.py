@@ -10,8 +10,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, ForeignKey, Numeric, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from be.base import Base
 from rdb.enums import OrderStatus
-from rdb.models import Base
 
 
 class Order(Base):
@@ -55,6 +55,3 @@ class Order(Base):
     )
 
     user: Mapped["User"] = relationship("User", back_populates="orders")
-    items: Mapped[list["OrderItem"]] = relationship(
-        "OrderItem", back_populates="order", cascade="all, delete-orphan"
-    )

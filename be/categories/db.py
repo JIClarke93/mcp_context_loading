@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import DateTime, ForeignKey, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from rdb.models import Base
+from be.base import Base
 
 
 class Category(Base):

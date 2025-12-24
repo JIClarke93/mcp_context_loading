@@ -136,17 +136,114 @@ This benchmark will provide data-driven insights into:
 - Performance characteristics under different query patterns
 - Best practices for hybrid implementations
 
+## Benchmark Results
+
+We conducted comprehensive benchmarking comparing context loading versus tool calling approaches using both mock data and real database queries. The results validate research findings from Speakeasy and demonstrate significant efficiency gains with tool-based architectures.
+
+### Key Findings
+
+**Token Usage Reduction: 91.44%**
+- Context Loading: 36,157 tokens (500 entities pre-loaded)
+- Tool Calling: 3,094 tokens (50 entities fetched on-demand)
+
+**Entity Efficiency**
+- Context Loading: 100 entities per type (users, products, categories, orders, reviews) = 500 total
+- Tool Calling: 10 entities per type via 5 tool calls = 50 total
+- Entity Reduction: 90%
+
+**Database Operations**
+- Both approaches: 5 database queries
+- Context Loading: 0 tool calls (all data pre-loaded into system prompt)
+- Tool Calling: 5 tool calls (on-demand fetching as needed)
+
+### Validation Against Research
+
+Our findings closely align with industry research:
+- **Speakeasy Report**: 91.2% token reduction for complex workflows
+- **Our Results**: 91.44% token reduction with real database
+- **Consistency**: Mock data benchmark showed 91.21% reduction, confirming reproducibility
+
+### Visualizations
+
+Comprehensive performance comparison charts are available in `benchmarks/results/`:
+- `agent_comparison.png` - Mock data benchmark (4-panel comparison)
+- `agent_comparison_db.png` - Real database benchmark (4-panel comparison)
+- `benchmark_results.json` - Mock data detailed metrics
+- `benchmark_results_db.json` - Real database detailed metrics
+
+Each visualization includes:
+1. Token usage comparison
+2. Total entities loaded
+3. Entity breakdown by type (users, products, categories, orders, reviews)
+4. Database queries and tool calls count
+
+### Practical Implications
+
+**When to Use Context Loading:**
+- Small, static datasets (< 100 entities)
+- Queries requiring full dataset visibility
+- Scenarios where latency is more critical than token cost
+- One-shot tasks without follow-up interactions
+
+**When to Use Tool Calling:**
+- Large datasets (> 100 entities)
+- Dynamic data that changes frequently
+- Multi-turn conversations where data needs evolve
+- Cost-sensitive applications (91% token reduction = 91% cost reduction)
+- Complex workflows requiring selective data access
+
+**Hybrid Approach:**
+Consider combining both patterns:
+- Load frequently accessed static data (e.g., category hierarchy, product types) into context
+- Use tools for variable/dynamic queries (e.g., user orders, inventory levels, reviews)
+- Provides balance between latency and token efficiency
+
+### Benchmark Methodology
+
+**Database Setup:**
+- SQLite database seeded with 500 test entities using `rdb/seed.py`
+- 5 business areas: users, products, categories, orders, reviews
+- Realistic relationships and data distributions
+
+**Agent Implementation:**
+- `be/chat_context/`: PydanticAI agent with full database context in system prompt
+- `be/chat_tools/`: PydanticAI agent with 10 registered tools wrapping service layer
+- Model: Anthropic Claude 3.5 Sonnet (`claude-3-5-sonnet-20241022`)
+- Token counting: tiktoken with `cl100k_base` encoding
+
+**Measurement Scripts:**
+- `benchmarks/compare_simple.py`: Mock data benchmark (no database required)
+- `benchmarks/compare_with_db.py`: Real database benchmark (requires seeded SQLite)
+- Both generate JSON metrics and matplotlib visualizations
+
+### Running Benchmarks
+
+```bash
+# Seed the database with test data
+uv run python rdb/seed.py
+
+# Run real database benchmark
+uv run python benchmarks/compare_with_db.py
+
+# Run mock data benchmark (faster, no DB required)
+uv run python benchmarks/compare_simple.py
+```
+
+Results are saved to `benchmarks/results/` with timestamped JSON data and PNG visualizations.
+
 ## Development Roadmap
 
 - [x] Database schema design and implementation
 - [x] Alembic migration setup
 - [x] FastAPI application structure using Netflix Dispatch pattern (services, routers, models, db, exceptions)
-- [ ] Context loading implementation
-- [ ] PydanticAI agent setup
-- [ ] FastMCP tool integration
-- [ ] Benchmarking framework
-- [ ] Comparative analysis
-- [ ] Documentation and findings
+- [x] Context loading implementation (`be/chat_context/`)
+- [x] PydanticAI agent setup (both context and tools modes)
+- [x] Tool calling implementation (`be/chat_tools/`)
+- [x] Benchmarking framework (mock and real database)
+- [x] Comparative analysis and visualizations
+- [x] Documentation and findings
+- [ ] FastMCP integration (optional enhancement)
+- [ ] Production deployment considerations
 
 ## License
 

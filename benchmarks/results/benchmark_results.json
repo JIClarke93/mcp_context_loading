@@ -1,0 +1,64 @@
+{
+  "timestamp": "2025-12-24T16:41:04.265764",
+  "context_loading": {
+    "approach": "context_loading",
+    "context_size_chars": 148338,
+    "context_size_tokens": 59215,
+    "entities_loaded": {
+      "users": 100,
+      "products": 100,
+      "categories": 100,
+      "orders": 100,
+      "reviews": 100,
+      "total": 500
+    },
+    "tool_calls": 0,
+    "queries_to_db": 5
+  },
+  "tool_calling": {
+    "approach": "tool_calling",
+    "context_size_chars": 12060,
+    "context_size_tokens": 5207,
+    "tool_calls": 5,
+    "queries_to_db": 5,
+    "tool_call_details": [
+      {
+        "tool": "list_users",
+        "chars": 1860,
+        "tokens": 786
+      },
+      {
+        "tool": "list_products",
+        "chars": 3430,
+        "tokens": 1317
+      },
+      {
+        "tool": "list_categories",
+        "chars": 1720,
+        "tokens": 705
+      },
+      {
+        "tool": "list_orders",
+        "chars": 2210,
+        "tokens": 1113
+      },
+      {
+        "tool": "list_reviews",
+        "chars": 2840,
+        "tokens": 1286
+      }
+    ],
+    "entities_loaded": {
+      "users": 10,
+      "products": 10,
+      "categories": 10,
+      "orders": 10,
+      "reviews": 10,
+      "total": 50
+    }
+  },
+  "summary": {
+    "token_reduction_pct": 91.21,
+    "entity_reduction_pct": 90.0
+  }
+}

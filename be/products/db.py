@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import Boolean, DateTime, Numeric, String, Uuid, ForeignKey, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from rdb.models import Base
+from be.base import Base
 
 
 class Product(Base):
@@ -52,7 +52,4 @@ class Product(Base):
     )
 
     category: Mapped["Category"] = relationship("Category", back_populates="products")
-    order_items: Mapped[list["OrderItem"]] = relationship(
-        "OrderItem", back_populates="product"
-    )
     reviews: Mapped[list["Review"]] = relationship("Review", back_populates="product")

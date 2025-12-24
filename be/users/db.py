@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import Boolean, DateTime, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from rdb.models import Base
+from be.base import Base
 
 
 class User(Base):
