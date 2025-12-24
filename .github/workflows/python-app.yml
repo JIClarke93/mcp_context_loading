@@ -1,0 +1,40 @@
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Read Python version from .python-version
+      id: pyver
+      run: echo "PYTHON_VERSION=$(cat .python-version)" >> "$GITHUB_ENV"
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: Install dependencies
+      run: uv sync
+
+    - name: Run pre-commit checks
+      run: |
+        uv run pre-commit install-hooks
+        uv run pre-commit run --all-files
+
+    - name: Run pytest
+      run: uv run pytest
