@@ -22,12 +22,16 @@ Each approach has theoretical trade-offs in terms of token consumption, response
 **Database Layer**
 - SQLite database with a moderately complex schema
 - Alembic for database migrations and version control
-- Netflix Dispatch pattern for clean separation of concerns (models, services, routers)
+- SQLAlchemy 2.0 ORM with Pydantic Settings validation
 
-**API Layer**
+**API Layer (Netflix Dispatch Pattern)**
 - FastAPI web framework serving the application
+- **Services**: Async business logic and database operations
+- **Routers**: API endpoint definitions and request handling
+- **Models**: Pydantic models for request/response validation
+- **DB**: SQLAlchemy database models
+- **Exceptions**: Domain-specific error handling
 - RESTful endpoints for agent interaction
-- Chat message persistence for conversation history
 
 **Agent Layer**
 - PydanticAI-powered conversational agent
@@ -38,6 +42,24 @@ Each approach has theoretical trade-offs in terms of token consumption, response
 - Token usage tracking for both approaches
 - Performance metrics collection
 - Comparative analysis tooling
+
+### Design Philosophy
+
+The backend follows the **Netflix Dispatch pattern**, organizing code by business domain (users, products, categories, orders, reviews) rather than technical layer. Each business area is self-contained with a consistent file structure:
+
+**`db.py`** - SQLAlchemy database model defining the table schema, relationships, and constraints. Uses UUID primary keys for security and distribution. Contains only the ORM model, no business logic.
+
+**`model.py`** - Pydantic models for API validation. Defines `Base`, `Create`, `Update`, and `Response` models with field validation and serialization rules. Enforces data integrity at the API boundary.
+
+**`service.py`** - Async business logic layer that is HTTP-agnostic. Contains all database operations, business rules, and validation logic. Raises domain-specific exceptions rather than HTTP errors, enabling reuse across different interfaces (REST, GraphQL, CLI).
+
+**`router.py`** - FastAPI endpoint definitions. Handles HTTP concerns (status codes, request/response formatting). Catches service layer exceptions and translates them to appropriate HTTP responses. Thin layer focused solely on web protocol.
+
+**`exceptions.py`** - Custom exception hierarchy for the domain. Base exception class for the business area with specific exceptions inheriting from it. Provides clear error semantics independent of transport layer.
+
+**`__init__.py`** - Public interface exports. Exposes models and exceptions for consumption by other business areas. Routers are imported explicitly when needed, maintaining loose coupling.
+
+This structure provides clear separation of concerns: database access, validation, business logic, and HTTP handling are isolated in dedicated files. The pattern scales well as business complexity grows and makes testing straightforward since each layer can be tested independently.
 
 ### Data Flow
 
@@ -116,9 +138,9 @@ This benchmark will provide data-driven insights into:
 
 ## Development Roadmap
 
-- [ ] Database schema design and implementation
-- [ ] FastAPI application structure (models, services, routers)
-- [ ] Alembic migration setup
+- [x] Database schema design and implementation
+- [x] Alembic migration setup
+- [x] FastAPI application structure using Netflix Dispatch pattern (services, routers, models, db, exceptions)
 - [ ] Context loading implementation
 - [ ] PydanticAI agent setup
 - [ ] FastMCP tool integration
