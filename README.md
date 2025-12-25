@@ -231,6 +231,81 @@ uv run python benchmarks/compare_simple.py
 
 Results are saved to `benchmarks/results/` with timestamped JSON data and PNG visualizations.
 
+## Dynamic Toolset Simulation
+
+Beyond comparing context loading vs static tools, we evaluated a third approach: **Dynamic Toolsets** based on [Speakeasy's research](https://www.speakeasy.com/blog/how-we-reduced-token-usage-by-100x-dynamic-toolsets-v2). This simulation answers: **At what point does the number of tools make static toolsets impractical?**
+
+### The Three Approaches
+
+| Approach | Description | Token Cost | Latency |
+|----------|-------------|------------|---------|
+| **Full Context** | Load all data into system prompt | O(n) with entities | Fixed |
+| **Static Tools** | Register all tool schemas upfront | O(n) with tools | Best |
+| **Dynamic Toolset** | Three-function discovery pattern | O(1) constant | Variable |
+
+The Dynamic Toolset uses a discovery pattern:
+1. `search_tools` - Semantic search to find relevant tools
+2. `describe_tools` - Lazy-load schemas only when needed
+3. `execute_tool` - Execute discovered tools
+
+### Key Finding: Variable Performance by Cycle Count
+
+Dynamic Toolset performance varies based on how many discovery cycles are needed:
+
+| Cycles | Latency | Accuracy | When This Happens |
+|--------|---------|----------|-------------------|
+| 2 | 2,406ms | 91.2% | Simple query, tool found immediately |
+| 3 | 3,508ms | 89.1% | Average case |
+| 4 | 4,611ms | 87.8% | Needs refinement |
+| 5 | 5,714ms | 86.4% | Complex multi-tool query |
+| 6 | 6,816ms | 85.1% | Worst case: multiple retries |
+
+### Simulation Results
+
+| Tools | Static Tokens | Static Accuracy | Dynamic Tokens | Dynamic Accuracy |
+|-------|---------------|-----------------|----------------|------------------|
+| 10 | 3,300 | 98% | 2,055 | 85-91% |
+| 50 | 7,300 | 88% | 2,055 | 85-91% |
+| 100 | 12,300 | 78% | 2,055 | 85-90% |
+| 200 | 22,300 | 78% | 2,055 | 85-90% |
+
+### Failure Modes
+
+Each approach has distinct failure characteristics:
+
+- **Full Context**: "Lost in the Middle" effect - accuracy degrades to ~83% regardless of tool count
+- **Static Tools**: Tool overload - accuracy degrades 0.3% per tool after 15 tools, bottoming at 78%
+- **Dynamic Toolset**: Cycle compounding - 1.5% error per discovery cycle, stays stable at 85-91%
+
+### Crossover Point: ~85 Tools
+
+At 85 tools, Dynamic Toolset becomes net favorable when weighing token savings against latency overhead.
+
+| Tool Count | Recommendation |
+|------------|----------------|
+| 1-15 | Static Tools (98% accuracy, fast) |
+| 16-40 | Static Tools (still 90%+ accuracy) |
+| 41-70 | Evaluate based on priorities |
+| 71-100 | Dynamic Toolset (Static drops to 78%) |
+| 100+ | Dynamic Toolset (only viable option) |
+
+### Running the Simulation
+
+```bash
+# Generate all plots
+uv run python -m be.chat_tools_speakeasy.simulation
+```
+
+Outputs in `be/chat_tools_speakeasy/`:
+- `plot_tokens_vs_latency.png` - Main trade-off with cycle spread
+- `plot_accuracy_analysis.png` - Accuracy degradation by approach
+- `plot_cycle_impact.png` - Cycle-by-cycle breakdown
+- `plot_complete_tradeoff.png` - 3D bubble visualization
+- `plot_crossover_analysis.png` - Break-even analysis
+- `plot_monthly_cost.png` - Cost comparison at scale
+
+See `be/chat_tools_speakeasy/README.md` for detailed methodology and model parameters.
+
 ## Development Roadmap
 
 - [x] Database schema design and implementation
@@ -242,6 +317,7 @@ Results are saved to `benchmarks/results/` with timestamped JSON data and PNG vi
 - [x] Benchmarking framework (mock and real database)
 - [x] Comparative analysis and visualizations
 - [x] Documentation and findings
+- [x] Dynamic Toolset simulation (`be/chat_tools_speakeasy/`)
 - [ ] FastMCP integration (optional enhancement)
 - [ ] Production deployment considerations
 
